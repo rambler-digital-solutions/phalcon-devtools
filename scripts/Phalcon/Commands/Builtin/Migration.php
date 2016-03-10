@@ -91,11 +91,22 @@ class Migration extends Command
             $migrationsDir = $path . 'migrations';
         }
 
+        // keep migrations log in db
+        // either "log-in-db" option or "logInDb" config variable from "application" block
         $migrationsInDb = false;
         if ($this->isReceivedOption('log-in-db')) {
             $migrationsInDb = true;
         } elseif (isset($config['application']['logInDb'])) {
             $migrationsInDb = $config['application']['logInDb'];
+        }
+
+        // migrations naming is timestamp-based rather than traditional, dotted versions
+        // either "ts-based" option or "migrationsTsBased" config variable from "application" block
+        $migrationsTsBased = false;
+        if ($this->isReceivedOption('ts-based')) {
+            $migrationsTsBased = true;
+        } elseif (isset($config['application']['migrationsTsBased'])) {
+            $migrationsTsBased = $config['application']['migrationsTsBased'];
         }
 
         $tableName = $this->isReceivedOption('table') ? $this->getOption('table') : 'all';
@@ -104,31 +115,44 @@ class Migration extends Command
         $action = $this->getOption(['action', 1]);
         $version = $this->getOption('version');
 
-        if ($action == 'generate') {
-            Migrations::generate([
-                'directory'       => $path,
-                'tableName'       => $tableName,
-                'exportData'      => $exportData,
-                'migrationsDir'   => $migrationsDir,
-                'version'         => $version,
-                'force'           => $this->isReceivedOption('force'),
-                'noAutoIncrement' => $this->isReceivedOption('no-auto-increment'),
-                'config'          => $config,
-                'descr'           => $descr,
-            ]);
-        } else {
-            if ($action == 'run') {
+        switch ($action) {
+            case 'generate':
+                Migrations::generate([
+                    'directory'       => $path,
+                    'tableName'       => $tableName,
+                    'exportData'      => $exportData,
+                    'migrationsDir'   => $migrationsDir,
+                    'version'         => $version,
+                    'force'           => $this->isReceivedOption('force'),
+                    'noAutoIncrement' => $this->isReceivedOption('no-auto-increment'),
+                    'config'          => $config,
+                    'descr'           => $descr,
+                ]);
+                break;
+            case 'run':
                 Migrations::run([
                     'directory'      => $path,
                     'tableName'      => $tableName,
                     'migrationsDir'  => $migrationsDir,
                     'force'          => $this->isReceivedOption('force'),
-                    'tsBased'        => $this->isReceivedOption('ts-based'),
+                    'tsBased'        => $migrationsTsBased,
                     'config'         => $config,
                     'version'        => $version,
                     'migrationsInDb' => $migrationsInDb,
                 ]);
-            }
+                break;
+            case 'list':
+                Migrations::listAll([
+                    'directory'      => $path,
+                    'tableName'      => $tableName,
+                    'migrationsDir'  => $migrationsDir,
+                    'force'          => $this->isReceivedOption('force'),
+                    'tsBased'        => $migrationsTsBased,
+                    'config'         => $config,
+                    'version'        => $version,
+                    'migrationsInDb' => $migrationsInDb,
+                ]);
+                break;
         }
     }
 
@@ -157,6 +181,9 @@ class Migration extends Command
 
         print Color::head('Usage: Run a Migration') . PHP_EOL;
         print Color::colorize('  migration run', Color::FG_GREEN) . PHP_EOL . PHP_EOL;
+
+        print Color::head('Usage: List all available migrations') . PHP_EOL;
+        print Color::colorize('  migration list', Color::FG_GREEN) . PHP_EOL . PHP_EOL;
 
         print Color::head('Arguments:') . PHP_EOL;
         print Color::colorize('  help', Color::FG_GREEN);
