@@ -249,6 +249,9 @@ class Migrations
                 print Color::info('Version ' . (string)$versionItem . ' was already rolled back');
                 continue;
             }
+            if ($versionItem === $finalVersion && ModelMigration::DIRECTION_BACK == $direction) {
+                break;
+            }
 
             $migrationStartTime = date('"Y-m-d H:i:s"');
             if ($tableName == 'all') {
