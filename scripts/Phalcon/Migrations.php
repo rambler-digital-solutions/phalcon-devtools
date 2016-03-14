@@ -229,7 +229,7 @@ class Migrations
             $direction = ModelMigration::DIRECTION_BACK;
         }
 
-        if ($initialVersion->getStamp() < $finalVersion->getStamp()) {
+        if (ModelMigration::DIRECTION_FORWARD == $direction) {
             // If we migrate up, we should go from the beginning to run some migrations which may have been missed
             $versionItemsTmp = VersionCollection::sortAsc(array_merge($versionItems, [$initialVersion]));
             $initialVersion = $versionItemsTmp[0];
@@ -249,7 +249,7 @@ class Migrations
                 print Color::info('Version ' . (string)$versionItem . ' was already rolled back');
                 continue;
             }
-            if ($versionItem === $finalVersion && ModelMigration::DIRECTION_BACK == $direction) {
+            if ($versionItem->getVersion() === $finalVersion->getVersion() && ModelMigration::DIRECTION_BACK == $direction) {
                 break;
             }
 
@@ -278,6 +278,11 @@ class Migrations
 
             $initialVersion = $versionItem;
         }
+    }
+
+    public static function rollback(array $options)
+    {
+
     }
 
     /**
