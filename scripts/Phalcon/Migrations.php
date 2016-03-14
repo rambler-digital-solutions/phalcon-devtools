@@ -280,11 +280,6 @@ class Migrations
         }
     }
 
-    public static function rollback(array $options)
-    {
-
-    }
-
     /**
      * List migrations along with statuses
      *
